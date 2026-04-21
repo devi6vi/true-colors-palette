@@ -29,10 +29,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Hue & Bloom — Personal Color Season Analysis" },
+      { title: "Tiramisu Analysis — Personal Color Season Analysis" },
       { name: "description", content: "Discover your true 12-season color palette with AI-powered personal color analysis." },
-      { name: "author", content: "Hue & Bloom" },
-      { property: "og:title", content: "Hue & Bloom — Personal Color Season Analysis" },
+      { name: "author", content: "Tiramisu Analysis" },
+      { property: "og:title", content: "Tiramisu Analysis — Personal Color Season Analysis" },
       { property: "og:description", content: "Discover your true 12-season color palette with AI-powered personal color analysis." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -71,7 +71,7 @@ function Header() {
     <header className="absolute top-0 left-0 right-0 z-20 px-6 py-5 md:px-10 md:py-7">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
         <Link to="/" className="font-display text-xl tracking-wide text-foreground md:text-2xl">
-          Hue <span className="italic text-accent">&amp;</span> Bloom
+          Tiramisu <span className="italic text-accent">Analysis</span>
         </Link>
         <nav className="flex items-center gap-6 text-sm">
           <Link

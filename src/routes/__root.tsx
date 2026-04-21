@@ -37,6 +37,10 @@ export const Route = createRootRoute({
       { property: "og:description", content: "Discover your true 12-season color palette with AI-powered personal color analysis." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Tiramisu Analysis — Personal Color Season Analysis" },
+      { name: "twitter:description", content: "Discover your true 12-season color palette with AI-powered personal color analysis." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/48fd7bb9-7cb7-4eb9-9817-0a89af4d7115/id-preview-f3e1b4e0--60d42bab-3613-4037-abf6-0b3eed03d300.lovable.app-1776759757897.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/48fd7bb9-7cb7-4eb9-9817-0a89af4d7115/id-preview-f3e1b4e0--60d42bab-3613-4037-abf6-0b3eed03d300.lovable.app-1776759757897.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

@@ -161,7 +161,7 @@ function Home() {
       </section>
 
       <footer className="px-6 pb-10 text-center text-xs text-muted-foreground md:px-10">
-        Hue &amp; Bloom · A personal color story
+        Tiramisu Analysis · A personal color story
       </footer>
     </main>
   );

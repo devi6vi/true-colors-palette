@@ -1,4 +1,5 @@
 import { Link, Outlet, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 import appCss from "../styles.css?url";
 
@@ -67,13 +68,34 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function Header() {
+  const { user, signOut } = useAuth();
   return (
     <header className="absolute top-0 left-0 right-0 z-20 px-6 py-5 md:px-10 md:py-7">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
         <Link to="/" className="font-display text-xl tracking-wide text-foreground md:text-2xl">
           Tiramisu <span className="italic text-accent">Analysis</span>
         </Link>
-        <nav className="flex items-center gap-6 text-sm">
+        <nav className="flex items-center gap-3 text-sm md:gap-5">
+          {user ? (
+            <>
+              <span className="hidden text-xs text-foreground/60 md:inline">
+                {user.user_metadata?.display_name || user.email}
+              </span>
+              <button
+                onClick={() => signOut()}
+                className="rounded-full border border-border bg-card px-4 py-2 text-foreground transition hover:bg-muted"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/auth"
+              className="rounded-full border border-border bg-card px-4 py-2 text-foreground transition hover:bg-muted"
+            >
+              Sign in
+            </Link>
+          )}
           <Link
             to="/analyze"
             className="rounded-full bg-primary px-5 py-2 text-primary-foreground transition hover:opacity-90"
@@ -88,9 +110,9 @@ function Header() {
 
 function RootComponent() {
   return (
-    <>
+    <AuthProvider>
       <Header />
       <Outlet />
-    </>
+    </AuthProvider>
   );
 }

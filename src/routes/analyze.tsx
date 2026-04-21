@@ -7,9 +7,9 @@ import { Toaster } from "@/components/ui/sonner";
 export const Route = createFileRoute("/analyze")({
   head: () => ({
     meta: [
-      { title: "Analyze · Hue & Bloom" },
+      { title: "Analyze · Tiramisu Analysis" },
       { name: "description", content: "Upload your daylight photo and check your undertone to begin your color analysis." },
-      { property: "og:title", content: "Analyze · Hue & Bloom" },
+      { property: "og:title", content: "Analyze · Tiramisu Analysis" },
       { property: "og:description", content: "Upload your daylight photo and check your undertone to begin your color analysis." },
     ],
   }),

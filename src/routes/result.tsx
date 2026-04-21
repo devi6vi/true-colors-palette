@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { SEASONS, type Season, type Undertone } from "@/lib/seasons";
 
 export const Route = createFileRoute("/result")({
   head: () => ({
     meta: [
-      { title: "Your Color Season · Hue & Bloom" },
+      { title: "Your Color Season · Tiramisu Analysis" },
       { name: "description", content: "Your personalized 12-season color palette." },
-      { property: "og:title", content: "Your Color Season · Hue & Bloom" },
+      { property: "og:title", content: "Your Color Season · Tiramisu Analysis" },
       { property: "og:description", content: "Your personalized 12-season color palette." },
     ],
   }),
@@ -25,6 +26,55 @@ interface StoredResult {
 function Result() {
   const [data, setData] = useState<StoredResult | null>(null);
   const [missing, setMissing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  async function generatePng(): Promise<string | null> {
+    if (!cardRef.current) return null;
+    return toPng(cardRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: "#faf6f1",
+    });
+  }
+
+  async function handleDownload() {
+    try {
+      setBusy(true);
+      const url = await generatePng();
+      if (!url || !data) return;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tiramisu-${data.season}.png`;
+      a.click();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleShare() {
+    try {
+      setBusy(true);
+      const url = await generatePng();
+      if (!url || !data) return;
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], `tiramisu-${data.season}.png`, { type: "image/png" });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "My Tiramisu Color Analysis",
+          text: `I'm a ${SEASONS[data.season].name}!`,
+        });
+      } else {
+        handleDownload();
+      }
+    } catch {
+      // user cancelled or unsupported
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     const raw = sessionStorage.getItem("hb:result");
@@ -150,6 +200,20 @@ function Result() {
         </section>
 
         <div className="mt-10 flex flex-wrap justify-center gap-3">
+          <button
+            onClick={handleDownload}
+            disabled={busy}
+            className="rounded-full bg-primary px-7 py-3 text-sm text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+          >
+            {busy ? "Preparing…" : "Download palette card"}
+          </button>
+          <button
+            onClick={handleShare}
+            disabled={busy}
+            className="rounded-full border border-border bg-card px-6 py-3 text-sm text-foreground transition hover:bg-muted disabled:opacity-60"
+          >
+            Share
+          </button>
           <Link
             to="/analyze"
             className="rounded-full border border-border bg-card px-6 py-3 text-sm text-foreground transition hover:bg-muted"
@@ -158,10 +222,78 @@ function Result() {
           </Link>
           <Link
             to="/"
-            className="rounded-full bg-primary px-7 py-3 text-sm text-primary-foreground transition hover:opacity-90"
+            className="rounded-full border border-border bg-card px-6 py-3 text-sm text-foreground transition hover:bg-muted"
           >
             Back home
           </Link>
+        </div>
+      </div>
+
+      {/* Off-screen shareable card (rendered to PNG) */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          top: 0,
+          left: "-200vw",
+          width: "1080px",
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          ref={cardRef}
+          style={{
+            width: "1080px",
+            height: "1350px",
+            padding: "80px 70px",
+            background: `linear-gradient(160deg, ${info.palette[0]}55, ${info.palette[3] || info.palette[1]}88, #faf6f1)`,
+            fontFamily: "'Cormorant Garamond', serif",
+            color: "#3a2e26",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            boxSizing: "border-box",
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 16, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, margin: 0 }}>
+              Tiramisu Analysis
+            </p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, letterSpacing: "0.25em", textTransform: "uppercase", opacity: 0.5, marginTop: 60 }}>
+              You are a
+            </p>
+            <h1 style={{ fontStyle: "italic", fontSize: 140, fontWeight: 500, lineHeight: 1, margin: "16px 0 0" }}>
+              {info.name}
+            </h1>
+            <p style={{ fontStyle: "italic", fontSize: 36, marginTop: 18, color: "#a86a5b" }}>
+              {info.tagline}
+            </p>
+            <div style={{ display: "flex", justifyContent: "center", gap: 40, marginTop: 36, fontFamily: "Inter, sans-serif", fontSize: 14, letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.7 }}>
+              <span>{info.family}</span>
+              <span>·</span>
+              <span>{info.undertone}</span>
+            </div>
+          </div>
+
+          <div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.6, textAlign: "center", marginBottom: 24 }}>
+              Your wardrobe palette
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14 }}>
+              {info.palette.map((c) => (
+                <div key={c}>
+                  <div style={{ aspectRatio: "1 / 1", borderRadius: 18, background: c, boxShadow: "0 6px 20px rgba(0,0,0,0.08)" }} />
+                  <p style={{ fontFamily: "monospace", fontSize: 13, textAlign: "center", marginTop: 8, opacity: 0.6 }}>
+                    {c.toUpperCase()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.5, textAlign: "center", margin: 0 }}>
+            tiramisu analysis · personal color story
+          </p>
         </div>
       </div>
     </main>

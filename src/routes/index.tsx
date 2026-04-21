@@ -4,9 +4,9 @@ import { SEASONS } from "@/lib/seasons";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Hue & Bloom — Find your 12-season color palette" },
+      { title: "Tiramisu Analysis — Find your 12-season color palette" },
       { name: "description", content: "Upload a daylight selfie and discover your true 12-season color palette in minutes." },
-      { property: "og:title", content: "Hue & Bloom — Find your 12-season color palette" },
+      { property: "og:title", content: "Tiramisu Analysis — Find your 12-season color palette" },
       { property: "og:description", content: "Upload a daylight selfie and discover your true 12-season color palette in minutes." },
     ],
   }),
@@ -161,7 +161,7 @@ function Home() {
       </section>
 
       <footer className="px-6 pb-10 text-center text-xs text-muted-foreground md:px-10">
-        Hue &amp; Bloom · A personal color story
+        Tiramisu Analysis · A personal color story
       </footer>
     </main>
   );

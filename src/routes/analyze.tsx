@@ -55,12 +55,17 @@ async function compressImage(file: File, maxDim = 1024, quality = 0.85): Promise
 
 function Analyze() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
   const [preview, setPreview] = useState<string | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [undertone, setUndertone] = useState<Undertone | null>(null);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) navigate({ to: "/auth" });
+  }, [user, authLoading, navigate]);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {

@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { SEASONS, type Season, type Undertone } from "@/lib/seasons";
 
 export const Route = createFileRoute("/result")({
   head: () => ({
     meta: [
-      { title: "Your Color Season · Hue & Bloom" },
+      { title: "Your Color Season · Tiramisu Analysis" },
       { name: "description", content: "Your personalized 12-season color palette." },
-      { property: "og:title", content: "Your Color Season · Hue & Bloom" },
+      { property: "og:title", content: "Your Color Season · Tiramisu Analysis" },
       { property: "og:description", content: "Your personalized 12-season color palette." },
     ],
   }),
@@ -25,6 +26,55 @@ interface StoredResult {
 function Result() {
   const [data, setData] = useState<StoredResult | null>(null);
   const [missing, setMissing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  async function generatePng(): Promise<string | null> {
+    if (!cardRef.current) return null;
+    return toPng(cardRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: "#faf6f1",
+    });
+  }
+
+  async function handleDownload() {
+    try {
+      setBusy(true);
+      const url = await generatePng();
+      if (!url || !data) return;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tiramisu-${data.season}.png`;
+      a.click();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleShare() {
+    try {
+      setBusy(true);
+      const url = await generatePng();
+      if (!url || !data) return;
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], `tiramisu-${data.season}.png`, { type: "image/png" });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "My Tiramisu Color Analysis",
+          text: `I'm a ${SEASONS[data.season].name}!`,
+        });
+      } else {
+        handleDownload();
+      }
+    } catch {
+      // user cancelled or unsupported
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     const raw = sessionStorage.getItem("hb:result");

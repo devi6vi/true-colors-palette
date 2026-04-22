@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { MakeupOverlay } from "@/components/MakeupOverlay";
+import type { MakeupAnalysis } from "@/routes/api.face-makeup";
 
 export const Route = createFileRoute("/face-makeup")({
   head: () => ({
@@ -77,7 +79,10 @@ function FaceMakeupPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [occasion, setOccasion] = useState<string>("everyday");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<MakeupAnalysis | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate({ to: "/auth" });
@@ -92,17 +97,39 @@ function FaceMakeupPage() {
       const compressed = await compressImage(file);
       setImageData(compressed);
       setPreview(compressed);
+      setAnalysis(null);
     } catch {
       toast.error("Could not read that image");
     }
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!imageData) {
       toast.error("Please upload a photo first");
       return;
     }
-    toast.info("Makeup analysis is coming soon — your photo is ready ✺");
+    setAnalyzing(true);
+    setAnalysis(null);
+    try {
+      const stored = typeof window !== "undefined" ? sessionStorage.getItem("hb:result") : null;
+      const season = stored ? (JSON.parse(stored)?.season as string | undefined) : undefined;
+      const res = await fetch("/api/face-makeup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: imageData, occasion, season }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Analysis failed");
+        return;
+      }
+      setAnalysis(data as MakeupAnalysis);
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Network error");
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   return (
@@ -198,17 +225,62 @@ function FaceMakeupPage() {
 
               <button
                 onClick={handleAnalyze}
-                disabled={!imageData}
+                disabled={!imageData || analyzing}
                 className="mt-6 w-full rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground transition disabled:opacity-40 hover:enabled:opacity-90"
               >
-                Analyze my face ✺
+                {analyzing ? "Mapping your face…" : "Analyze my face ✺"}
               </button>
               <p className="mt-3 text-center text-[11px] uppercase tracking-[0.2em] text-foreground/50">
-                Scroll for details ↓
+                {analysis ? "Result below ↓" : "Scroll for details ↓"}
               </p>
             </div>
           </div>
         </section>
+
+        {/* Result */}
+        {analysis && imageData && (
+          <section
+            ref={resultRef}
+            className="mb-16 rounded-[2rem] border border-border bg-card p-8 shadow-[var(--shadow-soft)] md:p-12"
+          >
+            <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-accent">Your map</p>
+                <h2 className="mt-2 font-display text-3xl text-foreground md:text-4xl">
+                  {analysis.faceShape} face
+                </h2>
+              </div>
+              <p className="max-w-md text-sm text-muted-foreground">{analysis.faceShapeReasoning}</p>
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <MakeupOverlay imageSrc={imageData} analysis={analysis} />
+
+              <div className="space-y-4">
+                {[
+                  { label: "Contour", text: analysis.contour.technique, color: "#8B5A3C" },
+                  { label: "Highlight", text: analysis.highlight.technique, color: "#F4E4BC" },
+                  { label: "Blush", text: analysis.blush.technique, color: "#E89B9B" },
+                  { label: "Brows", text: analysis.brow.technique, color: "#5C3A21" },
+                  { label: "Lips", text: analysis.lip.technique, color: "#C84B5F" },
+                  { label: "Eyes", text: analysis.eyes.technique, color: "#7B92B5" },
+                ].map((row) => (
+                  <div key={row.label} className="rounded-2xl border border-border bg-background/40 p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: row.color }} />
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground">{row.label}</p>
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{row.text}</p>
+                  </div>
+                ))}
+                <div className="rounded-2xl bg-accent/10 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">For this occasion</p>
+                  <p className="mt-2 text-sm leading-relaxed text-foreground/80">{analysis.occasionTip}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Face shapes */}
         <section className="mb-20">

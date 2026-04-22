@@ -79,7 +79,10 @@ function FaceMakeupPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [occasion, setOccasion] = useState<string>("everyday");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<MakeupAnalysis | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate({ to: "/auth" });
@@ -94,17 +97,39 @@ function FaceMakeupPage() {
       const compressed = await compressImage(file);
       setImageData(compressed);
       setPreview(compressed);
+      setAnalysis(null);
     } catch {
       toast.error("Could not read that image");
     }
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!imageData) {
       toast.error("Please upload a photo first");
       return;
     }
-    toast.info("Makeup analysis is coming soon — your photo is ready ✺");
+    setAnalyzing(true);
+    setAnalysis(null);
+    try {
+      const stored = typeof window !== "undefined" ? sessionStorage.getItem("hb:result") : null;
+      const season = stored ? (JSON.parse(stored)?.season as string | undefined) : undefined;
+      const res = await fetch("/api/face-makeup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: imageData, occasion, season }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Analysis failed");
+        return;
+      }
+      setAnalysis(data as MakeupAnalysis);
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Network error");
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   return (

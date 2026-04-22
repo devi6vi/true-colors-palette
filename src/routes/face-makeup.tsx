@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { MakeupOverlay } from "@/components/MakeupOverlay";
+import type { MakeupAnalysis } from "@/routes/api.face-makeup";
 
 export const Route = createFileRoute("/face-makeup")({
   head: () => ({

@@ -74,22 +74,22 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function Header() {
   const { user, signOut } = useAuth();
   const navLinkClass =
-    "text-foreground/75 transition hover:text-foreground data-[status=active]:text-accent data-[status=active]:font-medium";
+    "relative text-foreground/80 transition hover:text-foreground data-[status=active]:text-accent data-[status=active]:font-semibold data-[status=active]:after:absolute data-[status=active]:after:-bottom-1 data-[status=active]:after:left-0 data-[status=active]:after:right-0 data-[status=active]:after:h-px data-[status=active]:after:bg-accent";
   return (
-    <header className="absolute top-0 left-0 right-0 z-20 px-6 py-5 md:px-10 md:py-7">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+    <header className="sticky top-0 left-0 right-0 z-30 border-b border-border/60 bg-background/85 px-6 py-4 backdrop-blur-md md:px-10">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
         <Link to="/" className="font-display text-xl tracking-wide text-foreground md:text-2xl">
           Tiramisu <span className="italic text-accent">Analysis</span>
         </Link>
-        <nav className="hidden items-center gap-7 text-sm lg:flex">
+        <nav className="order-3 flex w-full items-center justify-center gap-5 text-sm sm:order-none sm:w-auto sm:gap-7">
           <Link to="/analyze" className={navLinkClass}>
             Color Analysis
           </Link>
-          <Link to="/quizzes" className={navLinkClass}>
-            Quizzes
+          <Link to="/clothes-analysis" className={navLinkClass}>
+            Clothes Analysis
           </Link>
           <Link to="/face-makeup" className={navLinkClass}>
-            Face & Makeup
+            Makeup Analysis
           </Link>
         </nav>
         <nav className="flex items-center gap-3 text-sm md:gap-4">

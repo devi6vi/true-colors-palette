@@ -1,4 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/face-makeup")({
   head: () => ({
@@ -30,9 +34,80 @@ const MAKEUP_MODULES = [
   { title: "Seasonal Makeup Edit", desc: "Lipsticks, blushes, and shadows from your color season — the wearable shortlist." },
 ];
 
+const OCCASIONS = [
+  { value: "everyday", label: "Everyday" },
+  { value: "work", label: "Work / Polished" },
+  { value: "evening", label: "Evening / Glam" },
+  { value: "natural", label: "Natural / No-makeup" },
+];
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function compressImage(file: File, maxDim = 1024, quality = 0.85): Promise<string> {
+  const dataUrl = await fileToDataUrl(file);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas error"));
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
 function FaceMakeupPage() {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [preview, setPreview] = useState<string | null>(null);
+  const [imageData, setImageData] = useState<string | null>(null);
+  const [occasion, setOccasion] = useState<string>("everyday");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) navigate({ to: "/auth" });
+  }, [user, authLoading, navigate]);
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+    try {
+      const compressed = await compressImage(file);
+      setImageData(compressed);
+      setPreview(compressed);
+    } catch {
+      toast.error("Could not read that image");
+    }
+  };
+
+  const handleAnalyze = () => {
+    if (!imageData) {
+      toast.error("Please upload a photo first");
+      return;
+    }
+    toast.info("Makeup analysis is coming soon — your photo is ready ✺");
+  };
+
   return (
     <main className="relative min-h-screen px-6 pt-32 pb-20 md:px-10">
+      <Toaster position="top-center" />
       <div className="pointer-events-none absolute -right-24 top-20 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
       <div className="pointer-events-none absolute -left-24 bottom-20 h-96 w-96 rounded-full bg-secondary/40 blur-3xl" />
 
@@ -46,6 +121,94 @@ function FaceMakeupPage() {
             Understand the architecture of your face — then learn the makeup techniques that celebrate it.
           </p>
         </div>
+
+        {/* Upload section */}
+        <section className="mb-16 rounded-[2rem] border border-border bg-card p-8 shadow-[var(--shadow-soft)] md:p-12">
+          <div className="mb-6 text-center">
+            <p className="text-xs uppercase tracking-[0.3em] text-accent">Step 1</p>
+            <h2 className="mt-2 font-display text-3xl text-foreground md:text-4xl">Upload your selfie</h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">
+              Front-facing, natural daylight, no makeup, hair pulled back. We'll map contour, blush, brow, and lip zones onto your photo.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2">
+            <div
+              onClick={() => inputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files?.[0];
+                if (file) handleFile(file);
+              }}
+              className="cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted/40 transition hover:border-accent"
+            >
+              {preview ? (
+                <div className="relative">
+                  <img src={preview} alt="Your selfie" className="max-h-80 w-full object-contain" />
+                  <div className="bg-card/80 px-4 py-2 text-center text-xs text-muted-foreground backdrop-blur">
+                    Click to replace
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-3 px-8 py-16 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent/20 text-accent">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                  <p className="font-display text-xl text-foreground">Tap or drop a selfie</p>
+                  <p className="text-xs text-muted-foreground">JPG / PNG · daylight · no filter</p>
+                </div>
+              )}
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFile(file);
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <p className="text-xs uppercase tracking-[0.25em] text-foreground/60">Choose an occasion</p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {OCCASIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    onClick={() => setOccasion(o.value)}
+                    className={`rounded-2xl border-2 p-4 text-sm font-medium transition ${
+                      occasion === o.value
+                        ? "border-accent bg-accent/5 text-foreground"
+                        : "border-border text-foreground/70 hover:border-accent/50"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-muted/50 p-5 text-xs leading-relaxed text-muted-foreground">
+                <p className="mb-1 font-medium text-foreground">What you'll get</p>
+                An annotated map of your face showing contour, highlight, blush placement, brow shape, and lip technique — calibrated to your color season.
+              </div>
+
+              <button
+                onClick={handleAnalyze}
+                disabled={!imageData}
+                className="mt-6 w-full rounded-full bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground transition disabled:opacity-40 hover:enabled:opacity-90"
+              >
+                Analyze my face ✺
+              </button>
+              <p className="mt-3 text-center text-[11px] uppercase tracking-[0.2em] text-foreground/50">
+                Scroll for details ↓
+              </p>
+            </div>
+          </div>
+        </section>
 
         {/* Face shapes */}
         <section className="mb-20">

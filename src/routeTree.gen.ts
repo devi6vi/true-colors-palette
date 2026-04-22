@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultRouteImport } from './routes/result'
 import { Route as QuizzesRouteImport } from './routes/quizzes'
 import { Route as FaceMakeupRouteImport } from './routes/face-makeup'
+import { Route as ClothesAnalysisRouteImport } from './routes/clothes-analysis'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnalyzeRouteImport } from './routes/analyze'
 import { Route as IndexRouteImport } from './routes/index'
@@ -30,6 +31,11 @@ const QuizzesRoute = QuizzesRouteImport.update({
 const FaceMakeupRoute = FaceMakeupRouteImport.update({
   id: '/face-makeup',
   path: '/face-makeup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClothesAnalysisRoute = ClothesAnalysisRouteImport.update({
+  id: '/clothes-analysis',
+  path: '/clothes-analysis',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
+  '/clothes-analysis': typeof ClothesAnalysisRoute
   '/face-makeup': typeof FaceMakeupRoute
   '/quizzes': typeof QuizzesRoute
   '/result': typeof ResultRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
+  '/clothes-analysis': typeof ClothesAnalysisRoute
   '/face-makeup': typeof FaceMakeupRoute
   '/quizzes': typeof QuizzesRoute
   '/result': typeof ResultRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
+  '/clothes-analysis': typeof ClothesAnalysisRoute
   '/face-makeup': typeof FaceMakeupRoute
   '/quizzes': typeof QuizzesRoute
   '/result': typeof ResultRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analyze'
     | '/auth'
+    | '/clothes-analysis'
     | '/face-makeup'
     | '/quizzes'
     | '/result'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analyze'
     | '/auth'
+    | '/clothes-analysis'
     | '/face-makeup'
     | '/quizzes'
     | '/result'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analyze'
     | '/auth'
+    | '/clothes-analysis'
     | '/face-makeup'
     | '/quizzes'
     | '/result'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyzeRoute: typeof AnalyzeRoute
   AuthRoute: typeof AuthRoute
+  ClothesAnalysisRoute: typeof ClothesAnalysisRoute
   FaceMakeupRoute: typeof FaceMakeupRoute
   QuizzesRoute: typeof QuizzesRoute
   ResultRoute: typeof ResultRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/face-makeup'
       fullPath: '/face-makeup'
       preLoaderRoute: typeof FaceMakeupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clothes-analysis': {
+      id: '/clothes-analysis'
+      path: '/clothes-analysis'
+      fullPath: '/clothes-analysis'
+      preLoaderRoute: typeof ClothesAnalysisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyzeRoute: AnalyzeRoute,
   AuthRoute: AuthRoute,
+  ClothesAnalysisRoute: ClothesAnalysisRoute,
   FaceMakeupRoute: FaceMakeupRoute,
   QuizzesRoute: QuizzesRoute,
   ResultRoute: ResultRoute,

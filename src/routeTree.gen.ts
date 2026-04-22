@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultRouteImport } from './routes/result'
+import { Route as QuizzesRouteImport } from './routes/quizzes'
+import { Route as FaceMakeupRouteImport } from './routes/face-makeup'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AnalyzeRouteImport } from './routes/analyze'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,6 +20,16 @@ import { Route as ApiAnalyzeRouteImport } from './routes/api.analyze'
 const ResultRoute = ResultRouteImport.update({
   id: '/result',
   path: '/result',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizzesRoute = QuizzesRouteImport.update({
+  id: '/quizzes',
+  path: '/quizzes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaceMakeupRoute = FaceMakeupRouteImport.update({
+  id: '/face-makeup',
+  path: '/face-makeup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -45,6 +57,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
+  '/face-makeup': typeof FaceMakeupRoute
+  '/quizzes': typeof QuizzesRoute
   '/result': typeof ResultRoute
   '/api/analyze': typeof ApiAnalyzeRoute
 }
@@ -52,6 +66,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
+  '/face-makeup': typeof FaceMakeupRoute
+  '/quizzes': typeof QuizzesRoute
   '/result': typeof ResultRoute
   '/api/analyze': typeof ApiAnalyzeRoute
 }
@@ -60,21 +76,47 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/auth': typeof AuthRoute
+  '/face-makeup': typeof FaceMakeupRoute
+  '/quizzes': typeof QuizzesRoute
   '/result': typeof ResultRoute
   '/api/analyze': typeof ApiAnalyzeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/analyze' | '/auth' | '/result' | '/api/analyze'
+  fullPaths:
+    | '/'
+    | '/analyze'
+    | '/auth'
+    | '/face-makeup'
+    | '/quizzes'
+    | '/result'
+    | '/api/analyze'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analyze' | '/auth' | '/result' | '/api/analyze'
-  id: '__root__' | '/' | '/analyze' | '/auth' | '/result' | '/api/analyze'
+  to:
+    | '/'
+    | '/analyze'
+    | '/auth'
+    | '/face-makeup'
+    | '/quizzes'
+    | '/result'
+    | '/api/analyze'
+  id:
+    | '__root__'
+    | '/'
+    | '/analyze'
+    | '/auth'
+    | '/face-makeup'
+    | '/quizzes'
+    | '/result'
+    | '/api/analyze'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyzeRoute: typeof AnalyzeRoute
   AuthRoute: typeof AuthRoute
+  FaceMakeupRoute: typeof FaceMakeupRoute
+  QuizzesRoute: typeof QuizzesRoute
   ResultRoute: typeof ResultRoute
   ApiAnalyzeRoute: typeof ApiAnalyzeRoute
 }
@@ -86,6 +128,20 @@ declare module '@tanstack/react-router' {
       path: '/result'
       fullPath: '/result'
       preLoaderRoute: typeof ResultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quizzes': {
+      id: '/quizzes'
+      path: '/quizzes'
+      fullPath: '/quizzes'
+      preLoaderRoute: typeof QuizzesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/face-makeup': {
+      id: '/face-makeup'
+      path: '/face-makeup'
+      fullPath: '/face-makeup'
+      preLoaderRoute: typeof FaceMakeupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -123,6 +179,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyzeRoute: AnalyzeRoute,
   AuthRoute: AuthRoute,
+  FaceMakeupRoute: FaceMakeupRoute,
+  QuizzesRoute: QuizzesRoute,
   ResultRoute: ResultRoute,
   ApiAnalyzeRoute: ApiAnalyzeRoute,
 }

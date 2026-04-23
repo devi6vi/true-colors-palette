@@ -95,9 +95,12 @@ function Header() {
         <nav className="flex items-center gap-3 text-sm md:gap-4">
           {user ? (
             <>
-              <span className="hidden text-xs text-foreground/60 md:inline">
-                {user.user_metadata?.display_name || user.email}
-              </span>
+              <Link
+                to="/profile"
+                className="hidden rounded-full border border-border bg-card px-4 py-2 text-foreground transition hover:bg-muted md:inline-flex"
+              >
+                Profile
+              </Link>
               <button
                 onClick={() => signOut()}
                 className="rounded-full border border-border bg-card px-4 py-2 text-foreground transition hover:bg-muted"

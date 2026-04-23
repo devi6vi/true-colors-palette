@@ -16,25 +16,55 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          aesthetic: string | null
+          age: number | null
           avatar_url: string | null
+          body_shape: string | null
+          bust_size: string | null
+          clothes_quiz_completed_at: string | null
+          color_season: string | null
           created_at: string
           display_name: string | null
+          gender: string | null
+          height_cm: number | null
           id: string
+          style_picks: string[] | null
           updated_at: string
+          weight_kg: number | null
         }
         Insert: {
+          aesthetic?: string | null
+          age?: number | null
           avatar_url?: string | null
+          body_shape?: string | null
+          bust_size?: string | null
+          clothes_quiz_completed_at?: string | null
+          color_season?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
+          height_cm?: number | null
           id: string
+          style_picks?: string[] | null
           updated_at?: string
+          weight_kg?: number | null
         }
         Update: {
+          aesthetic?: string | null
+          age?: number | null
           avatar_url?: string | null
+          body_shape?: string | null
+          bust_size?: string | null
+          clothes_quiz_completed_at?: string | null
+          color_season?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
+          height_cm?: number | null
           id?: string
+          style_picks?: string[] | null
           updated_at?: string
+          weight_kg?: number | null
         }
         Relationships: []
       }

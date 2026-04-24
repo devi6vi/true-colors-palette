@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -321,19 +321,6 @@ function FaceMakeupPage() {
           </div>
         </section>
 
-        <div className="rounded-[2rem] bg-primary p-10 text-center text-primary-foreground md:p-14" style={{ boxShadow: "var(--shadow-soft)" }}>
-          <h2 className="font-display text-3xl md:text-4xl">Coming soon</h2>
-          <p className="mx-auto mt-3 max-w-md text-sm opacity-85">
-            Face shape & makeup analysis is in development. In the meantime, get your color season — your future makeup edit will be built on it.
-          </p>
-          <Link
-            to="/analyze"
-            className="mt-6 inline-flex rounded-full bg-cream px-7 py-3 text-sm font-medium text-mocha transition hover:opacity-90"
-            style={{ background: "var(--cream)", color: "var(--mocha)" }}
-          >
-            Start with color →
-          </Link>
-        </div>
       </div>
     </main>
   );

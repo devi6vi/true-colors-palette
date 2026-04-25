@@ -19,7 +19,11 @@ export type Database = {
           aesthetic: string | null
           age: number | null
           avatar_url: string | null
+          body_image_url: string | null
           body_shape: string | null
+          body_type_completed_at: string | null
+          body_type_outfit_picks: string[] | null
+          body_type_result: string | null
           bust_size: string | null
           clothes_quiz_completed_at: string | null
           color_season: string | null
@@ -36,7 +40,11 @@ export type Database = {
           aesthetic?: string | null
           age?: number | null
           avatar_url?: string | null
+          body_image_url?: string | null
           body_shape?: string | null
+          body_type_completed_at?: string | null
+          body_type_outfit_picks?: string[] | null
+          body_type_result?: string | null
           bust_size?: string | null
           clothes_quiz_completed_at?: string | null
           color_season?: string | null
@@ -53,7 +61,11 @@ export type Database = {
           aesthetic?: string | null
           age?: number | null
           avatar_url?: string | null
+          body_image_url?: string | null
           body_shape?: string | null
+          body_type_completed_at?: string | null
+          body_type_outfit_picks?: string[] | null
+          body_type_result?: string | null
           bust_size?: string | null
           clothes_quiz_completed_at?: string | null
           color_season?: string | null

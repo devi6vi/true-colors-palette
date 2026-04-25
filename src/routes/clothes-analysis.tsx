@@ -193,7 +193,7 @@ function ClothesAnalysisPage() {
           {QUIZZES.map((q, i) => (
             <Link
               key={q.slug}
-              to="/clothes-analysis"
+              to={q.slug === "body-type" ? "/quiz/body-type" : "/clothes-analysis"}
               className={`group relative overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[var(--shadow-petal)] ${q.tall ? "row-span-2" : ""}`}
               style={{ animationDelay: `${i * 60}ms` }}
             >

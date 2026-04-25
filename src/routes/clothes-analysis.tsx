@@ -3,6 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { SEASONS, type Season } from "@/lib/seasons";
+import quizBodyType from "@/assets/quiz-body-type.jpg";
+import quizCapsule from "@/assets/quiz-capsule.jpg";
+import quizFabric from "@/assets/quiz-fabric.jpg";
+import quizPrint from "@/assets/quiz-print.jpg";
+import quizFormulas from "@/assets/quiz-formulas.jpg";
+import quizSeasonal from "@/assets/quiz-seasonal.jpg";
 
 export const Route = createFileRoute("/clothes-analysis")({
   head: () => ({
@@ -16,13 +22,13 @@ export const Route = createFileRoute("/clothes-analysis")({
   component: ClothesAnalysisPage,
 });
 
-const MODULES = [
-  { title: "Body Type Mapping", desc: "Identify your proportions and the silhouettes that balance them." },
-  { title: "Capsule Wardrobe", desc: "A curated 30-piece capsule built around your lifestyle and palette." },
-  { title: "Fabric & Texture Guide", desc: "Which weights, weaves, and drapes harmonize with your frame." },
-  { title: "Print & Pattern Edit", desc: "Scale and motif recommendations that complement your features." },
-  { title: "Outfit Formulas", desc: "Repeatable outfit equations for work, weekend, and evening." },
-  { title: "Seasonal Style Edit", desc: "Pieces tied to your color season for an effortless wardrobe." },
+const QUIZZES = [
+  { slug: "body-type", title: "Body Type Mapping", desc: "Identify your proportions and the silhouettes that balance them.", img: quizBodyType, tag: "Silhouette", time: "4 min", questions: 8, tall: true },
+  { slug: "capsule", title: "Capsule Wardrobe", desc: "Build a 30-piece capsule around your lifestyle and palette.", img: quizCapsule, tag: "Wardrobe", time: "6 min", questions: 12 },
+  { slug: "fabric", title: "Fabric & Texture", desc: "Which weights, weaves and drapes harmonize with your frame.", img: quizFabric, tag: "Material", time: "3 min", questions: 6 },
+  { slug: "print", title: "Print & Pattern", desc: "Scale and motif recommendations that complement your features.", img: quizPrint, tag: "Pattern", time: "3 min", questions: 7, tall: true },
+  { slug: "formulas", title: "Outfit Formulas", desc: "Repeatable outfit equations for work, weekend and evening.", img: quizFormulas, tag: "Styling", time: "5 min", questions: 10 },
+  { slug: "seasonal", title: "Seasonal Edit", desc: "Pieces tied to your color season for an effortless wardrobe.", img: quizSeasonal, tag: "Season", time: "4 min", questions: 8 },
 ];
 
 type ProfileRow = {
@@ -173,20 +179,56 @@ function ClothesAnalysisPage() {
           )}
         </section>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {MODULES.map((m) => (
-            <article key={m.title} className="rounded-3xl border border-border bg-card p-7 transition hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]">
-              <h2 className="font-display text-xl text-foreground">{m.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{m.desc}</p>
-            </article>
-          ))}
+        <div className="mb-8 flex items-end justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-accent">Style quizzes</p>
+            <h2 className="mt-2 font-display text-3xl text-foreground md:text-4xl">Go deeper, one quiz at a time</h2>
+          </div>
+          <p className="hidden max-w-xs text-right text-sm text-muted-foreground md:block">
+            Each quiz refines a different layer of your wardrobe — take them in any order.
+          </p>
         </div>
 
-        <div className="mt-16 rounded-[2rem] bg-primary p-10 text-center text-primary-foreground md:p-14" style={{ boxShadow: "var(--shadow-soft)" }}>
-          <h2 className="font-display text-3xl md:text-4xl">Detailed edit coming soon</h2>
-          <p className="mx-auto mt-3 max-w-md text-sm opacity-85">
-            Your full personalized wardrobe edit — capsule pieces, outfit formulas, and shoppable picks — is in development.
-          </p>
+        <div className="grid auto-rows-[200px] gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {QUIZZES.map((q, i) => (
+            <Link
+              key={q.slug}
+              to="/clothes-analysis"
+              className={`group relative overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[var(--shadow-petal)] ${q.tall ? "row-span-2" : ""}`}
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <img
+                src={q.img}
+                alt={q.title}
+                loading="lazy"
+                width={1024}
+                height={1024}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+              <div className="absolute left-5 top-5 flex items-center gap-2">
+                <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-foreground backdrop-blur">
+                  {q.tag}
+                </span>
+                <span className="rounded-full bg-black/40 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-white backdrop-blur">
+                  {q.time}
+                </span>
+              </div>
+              <div className="absolute inset-x-0 bottom-0 p-6">
+                <h3 className="font-display text-2xl leading-tight text-white drop-shadow-md md:text-3xl">
+                  {q.title}
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm text-white/85">{q.desc}</p>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-[0.2em] text-white/70">{q.questions} questions</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-xs font-medium text-accent-foreground transition-all group-hover:gap-2.5 group-hover:bg-white group-hover:text-foreground">
+                    Take quiz
+                    <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </main>

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { MakeupAnalysis, Point, ZoneEllipse } from "@/routes/api.face-makeup";
 
-type LayerKey = "contour" | "highlight" | "blush" | "brow" | "lip";
+type LayerKey = "outline" | "contour" | "highlight" | "blush" | "brow" | "lip";
 
 const LAYERS: { key: LayerKey; label: string; color: string }[] = [
+  { key: "outline", label: "Face outline", color: "#4ADE80" },
   { key: "contour", label: "Contour", color: "#8B5A3C" },
   { key: "highlight", label: "Highlight", color: "#F4E4BC" },
   { key: "blush", label: "Blush", color: "#E89B9B" },

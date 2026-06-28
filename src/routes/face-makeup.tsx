@@ -249,6 +249,12 @@ function FaceMakeupPage() {
                 <h2 className="mt-2 font-display text-3xl text-foreground md:text-4xl">
                   {analysis.faceShape} face
                 </h2>
+                {typeof analysis.confidence === "number" && (
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-foreground/50">
+                    AI confidence · {Math.round(analysis.confidence * 100)}%
+                    {analysis.confidence < 0.4 && " · try a brighter, front-facing photo"}
+                  </p>
+                )}
               </div>
               <p className="max-w-md text-sm text-muted-foreground">{analysis.faceShapeReasoning}</p>
             </div>

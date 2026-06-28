@@ -47,7 +47,7 @@ export function MakeupOverlay({
   analysis: MakeupAnalysis;
 }) {
   const [active, setActive] = useState<Record<LayerKey, boolean>>({
-    contour: true, highlight: true, blush: true, brow: true, lip: true,
+    outline: true, contour: true, highlight: true, blush: true, brow: true, lip: true,
   });
 
   const toggle = (k: LayerKey) => setActive((s) => ({ ...s, [k]: !s[k] }));

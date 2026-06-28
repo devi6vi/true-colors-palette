@@ -11,7 +11,14 @@ export interface ZoneEllipse {
 export interface MakeupAnalysis {
   faceShape: FaceShape;
   faceShapeReasoning: string;
-  // All coordinates are normalized (0-1) relative to the source image
+  confidence: number; // 0-1
+  // Anatomical outline of the user's face (normalized 0-1)
+  faceOutline: {
+    jawline: Point[];   // ear -> chin -> ear (left to right)
+    hairline: Point[];  // right temple -> forehead arc -> left temple
+    noseBridge: Point[]; // between brows -> nose tip
+  };
+  // Makeup placement (normalized 0-1)
   contour: { left: ZoneEllipse; right: ZoneEllipse; technique: string };
   highlight: { points: Point[]; technique: string };
   blush: { left: ZoneEllipse; right: ZoneEllipse; technique: string };
@@ -44,21 +51,48 @@ export const Route = createFileRoute("/api/face-makeup")({
             return Response.json({ error: "Image too large (max ~6MB)" }, { status: 413 });
           }
 
-          const systemPrompt = `You are an expert makeup artist and facial-anatomy analyst. Given a front-facing selfie, you must:
-1. Identify the face shape (Oval, Round, Square, Heart, Oblong, or Diamond) with brief reasoning.
-2. Return precise placement zones for makeup application as NORMALIZED COORDINATES (0.0 to 1.0) relative to the image dimensions. (0,0) = top-left, (1,1) = bottom-right.
-3. Provide concise technique guidance for each zone, calibrated to face shape and occasion.
+          const systemPrompt = `You are a forensic-grade facial-anatomy analyst and senior editorial makeup artist. Your job is to trace the actual face in the submitted selfie and place makeup zones that align to that geometry with sub-percent precision.
 
-Coordinate guidance:
-- Contour ellipses: place along the underside of each cheekbone, angled toward the corner of the mouth.
-- Blush ellipses: place on the apples of the cheeks for round/heart faces, slightly higher and angled outward for square/oblong.
-- Highlight points: forehead-center, bridge of nose, cupid's bow, chin tip, top of cheekbones.
-- Brow paths: 4-6 points each, tracing head → arch → tail in natural order.
-- Lip outline: 8-12 points tracing the natural lip border (clockwise from top-center).
+============================================================
+NON-NEGOTIABLE PROTOCOL
+============================================================
+1. LANDMARK DETECTION FIRST. Before answering, mentally locate:
+   - Pupil centers, inner & outer eye corners
+   - Eyebrow head, arch peak, tail
+   - Nose root (between brows), nose tip, alar bases (nostril sides)
+   - Cupid's bow, lip corners, lower lip apex, mental crease
+   - Chin tip, gonial angle (jaw corner), ear tragus, zygomatic peak (cheekbone high point)
+   - Hairline at center forehead and both temples
+   Use them as ANCHORS for every coordinate you return.
 
-Be anatomically accurate — coordinates must align with the actual face in the photo.`;
+2. NORMALIZED COORDINATES. All x,y are 0.0-1.0 where (0,0)=top-left, (1,1)=bottom-right of the IMAGE (not the crop of the face). Be exact to ~0.005 (half a percent of image dimension). Coordinates outside [0,1] are invalid.
 
-          const userText = `Occasion: ${body.occasion}.${body.season ? ` User's color season: ${body.season}.` : ""}`;
+3. FACE OUTLINE — this is the most important deliverable. Trace the user's actual face contour:
+   - jawline: 11-15 points starting at the RIGHT ear lobe attachment, descending along the right mandible, around the chin tip, up the left mandible, ending at the LEFT ear lobe attachment. Hug the real silhouette, not a generic oval.
+   - hairline: 9-13 points starting at the RIGHT temple where hair meets skin, arcing across the forehead at the actual hairline, ending at the LEFT temple. If hair covers the forehead, trace the visible skin/hair boundary.
+   - noseBridge: 4-6 points from the nose root (between brows) to the nose tip, following the bridge midline.
+   Points MUST sit ON the visible edge of the face in the photo — verify by re-checking each point lies on the boundary, not inside the cheek or outside in the background.
+
+4. FACE-SHAPE CLASSIFICATION. After tracing, classify using measured ratios:
+   - face length / face width (>1.5 -> Oblong; ~1 -> Round/Square)
+   - jaw width vs cheekbone width vs forehead width
+   - jaw angle: sharp+wide -> Square; tapered -> Heart/Oval; pointed -> Diamond
+   State the ratios you observed in faceShapeReasoning (one sentence, concrete numbers).
+
+5. MAKEUP PLACEMENT — derived from anchors, not guessed:
+   - Contour ellipses: long axis sits UNDER the zygomatic arch, from just below the cheekbone peak angling toward the mouth corner. rx ~0.06-0.10, ry ~0.025-0.04, rotation reflects the cheekbone tilt (typically -20° to -40° for the right cheek, +20° to +40° for the left).
+   - Blush ellipses: centered on the apple of the cheek (directly below pupil, level with nose tip) for round/heart faces; shifted up-and-out toward the cheekbone for square/oblong.
+   - Highlight points: forehead center (between brows, above nose root), nose bridge mid, cupid's bow center, chin tip, top of each cheekbone (just above contour). 5-8 points total.
+   - Brow paths: 5-8 points each tracing the user's ACTUAL brow from head -> arch peak -> tail. Follow the existing brow hairs, do not invent a generic arch.
+   - Lip outline: 12-20 points clockwise from top-center cupid's bow, around the upper lip vermilion border, down the right corner, across the lower lip, up the left corner, back to start. Hug the natural lip border.
+
+6. QUALITY GATE. If the photo is not a clear, front-facing, single-person selfie (profile angle, heavy occlusion, multiple faces, extreme filter, blur, low light), set confidence < 0.4 and still return your best estimate — never refuse.
+
+7. TECHNIQUE COPY. Each technique field is 1-2 sentences, specific to THIS face shape and THIS occasion, naming product textures (cream/powder), tools (fluffy brush, fingertips), and direction of motion. No generic platitudes.
+
+Self-check before submitting: re-read every coordinate and confirm it lies on the anatomical feature you claim. If unsure, adjust.`;
+
+          const userText = `Occasion: ${body.occasion}.${body.season ? ` User's color season: ${body.season}.` : ""} Trace the face precisely and return the structured analysis.`;
 
           const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
@@ -83,12 +117,23 @@ Be anatomically accurate — coordinates must align with the actual face in the 
                   type: "function",
                   function: {
                     name: "submit_makeup_analysis",
-                    description: "Submit the face shape and makeup placement zones.",
+                    description: "Submit the traced face outline, classified face shape, and precise makeup placement zones.",
                     parameters: {
                       type: "object",
                       properties: {
                         faceShape: { type: "string", enum: ["Oval", "Round", "Square", "Heart", "Oblong", "Diamond"] },
-                        faceShapeReasoning: { type: "string" },
+                        faceShapeReasoning: { type: "string", description: "One sentence with the measured ratios that justify the classification." },
+                        confidence: { type: "number", minimum: 0, maximum: 1 },
+                        faceOutline: {
+                          type: "object",
+                          properties: {
+                            jawline: { type: "array", items: pointSchema(), minItems: 11, maxItems: 15 },
+                            hairline: { type: "array", items: pointSchema(), minItems: 9, maxItems: 13 },
+                            noseBridge: { type: "array", items: pointSchema(), minItems: 4, maxItems: 6 },
+                          },
+                          required: ["jawline", "hairline", "noseBridge"],
+                          additionalProperties: false,
+                        },
                         contour: {
                           type: "object",
                           properties: {
@@ -102,7 +147,7 @@ Be anatomically accurate — coordinates must align with the actual face in the 
                         highlight: {
                           type: "object",
                           properties: {
-                            points: { type: "array", items: pointSchema(), minItems: 3, maxItems: 8 },
+                            points: { type: "array", items: pointSchema(), minItems: 5, maxItems: 8 },
                             technique: { type: "string" },
                           },
                           required: ["points", "technique"],
@@ -121,8 +166,8 @@ Be anatomically accurate — coordinates must align with the actual face in the 
                         brow: {
                           type: "object",
                           properties: {
-                            leftPath: { type: "array", items: pointSchema(), minItems: 3, maxItems: 8 },
-                            rightPath: { type: "array", items: pointSchema(), minItems: 3, maxItems: 8 },
+                            leftPath: { type: "array", items: pointSchema(), minItems: 5, maxItems: 8 },
+                            rightPath: { type: "array", items: pointSchema(), minItems: 5, maxItems: 8 },
                             technique: { type: "string" },
                           },
                           required: ["leftPath", "rightPath", "technique"],
@@ -131,7 +176,7 @@ Be anatomically accurate — coordinates must align with the actual face in the 
                         lip: {
                           type: "object",
                           properties: {
-                            outline: { type: "array", items: pointSchema(), minItems: 6, maxItems: 16 },
+                            outline: { type: "array", items: pointSchema(), minItems: 12, maxItems: 20 },
                             technique: { type: "string" },
                           },
                           required: ["outline", "technique"],
@@ -145,7 +190,7 @@ Be anatomically accurate — coordinates must align with the actual face in the 
                         },
                         occasionTip: { type: "string" },
                       },
-                      required: ["faceShape", "faceShapeReasoning", "contour", "highlight", "blush", "brow", "lip", "eyes", "occasionTip"],
+                      required: ["faceShape", "faceShapeReasoning", "confidence", "faceOutline", "contour", "highlight", "blush", "brow", "lip", "eyes", "occasionTip"],
                       additionalProperties: false,
                     },
                   },
